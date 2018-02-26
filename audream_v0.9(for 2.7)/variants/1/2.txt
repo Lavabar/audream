@@ -1,0 +1,8 @@
+C4. Study the advertisement.
+You are taking a language course in Australia. You want to try surfing. You have just found an advertisement to join a local surfing club. You are calling to the club to make some clarifications. In 1,5 minutes you are to ask 5 questions. You have 20 seconds to ask each question.
+Find out: 
+1.	location of the club
+2.	classes for beginners availability
+3.	personal coach availability
+4.	price for a week
+5.	discounts for students
