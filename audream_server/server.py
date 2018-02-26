@@ -38,41 +38,50 @@ def update_base(n):
                 zt = path + str(i) + "/" + str(j) + ".txt"
                 zp = path + str(i) + "/" + str(j) + ".jpg"
                 f1 = open (zt, "rb")
-                l = f1.read(200)
-                while (l):
-                    sc.send(l)
-                    l = f1.read(200)
+                for line in open(zt, "rb"):
+        	        k1 = chr(len(line) >> 8)
+        	        k2 = chr(len(line) - (ord(k1) << 8))
+        	        sc.send(k1)
+        	        sc.send(k2)
+        	        sc.send(line)
+    	        sc.send(chr(0))
+    	        sc.send(chr(5))
+    	        sc.send(";;;;;") 
                 f1.close()
-                sleep(1) 
                 f2 = open (zp, "rb")
-                l = f2.read(200)
-                while (l):
-                    sc.send(l)
-                    l = f2.read(200)
+                for line in open(zp, "rb"):
+        	        k1 = chr(len(line) >> 8)
+        	        k2 = chr(len(line) - (ord(k1) << 8))
+        	        sc.send(k1)
+        	        sc.send(k2)
+        	        sc.send(line)
+    	        sc.send(chr(0))
+    	        sc.send(chr(5))
+    	        sc.send(";;;;;")
                 f2.close()
-                sleep(1)
     else:
         print(str(n) + " " + str(nvar))
         sc.send("0  ")
 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(("192.168.100.6", 9999))
+s.bind(("192.168.31.123", 9999))
 s.listen(10)
 
-sc, address = s.accept()
-
-print(address)
 while (True):
-    msg = sc.recv(MSGLEN)
-    cmd = msg.split(" ")
-    if cmd[0] == "0":
-        update_stat()    
-        update_base(ord(cmd[1]))
-    elif cmd[0] == "1":
-        break
-    else:
-        print("Wrong cmd!")
+    sc, address = s.accept()
+    print(address)
+    while (True):
+        msg = sc.recv(MSGLEN)
+        cmd = msg.split(" ")
+        if cmd[0] == "0":
+            update_stat()    
+            update_base(ord(cmd[1]))
+        elif cmd[0] == "1":
+            break
+        else:
+            print("Wrong cmd!")
+    sc.close()
+    break # just for testing(need to remove this break)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-sc.close()
 s.close()
