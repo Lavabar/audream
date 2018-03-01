@@ -30,6 +30,10 @@ listbox_items = ['var 1', 'var 2']
 def exitAll(root):
     root.destroy()
 
+#
+#Tasks section
+#
+
 def voiceRecorder(suff):
     global flag_voice
     flag_voice = True
@@ -143,7 +147,7 @@ def nextTask():
 def showMain(root):
     root.deiconify()
     root.attributes('-fullscreen', 1)
-    
+    root.focus_force()
     label1 = tk.Label(root, text="Your task is:")
     #label1.place(x=50, y=10)
     label1.grid(row=0, column=0)

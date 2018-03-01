@@ -1,7 +1,8 @@
 '''
 recv cmds:
 "0" - upadate base
-"1" - finish session
+"1" - recieve new variants
+"2" - finish session
 
 send cmds:
 "0" - UOK(you okay)
@@ -77,7 +78,7 @@ while (True):
         if cmd[0] == "0":
             update_stat()    
             update_base(ord(cmd[1]))
-        elif cmd[0] == "1":
+        elif cmd[0] == "2":
             break
         else:
             print("Wrong cmd!")

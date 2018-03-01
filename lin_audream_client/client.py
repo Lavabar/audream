@@ -56,4 +56,4 @@ def update_base(s):
                 f2.close()
     else:
         print("wrong answer! "+ans)
-    s.send("1  ")
+    s.send("2  ")
