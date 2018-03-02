@@ -77,6 +77,7 @@ def voiceRecorder(suff):
 def clearTextbox(txt):
     txt.delete('1.0', tk.END)
 def openTask(num, txt):
+    txt['state'] = tk.NORMAL
     txtname = 'variants/' + chosen_var + '/' + num + '.txt'
     imgname = 'variants/' + chosen_var + '/' + num + '.jpg'
     for i in fileinput.input(txtname):
@@ -85,7 +86,7 @@ def openTask(num, txt):
     img = ImageTk.PhotoImage(fimg)
     txt.image_create(tk.END, image=img)
     txt.image = img
-
+    txt['state'] = tk.DISABLED
 #
 #Timer section
 #
@@ -104,6 +105,7 @@ def timer_reset(tmr, label):
     show_timer(tmr)
 
 def timer_tick(root, tmr, label, txt):
+    root.focus_force()
     global timer_seconds, c, total, flag_next
     t = threading.Thread(target=lambda:voiceRecorder(numbers[total - 1]))
     if timer_running and timer_seconds and flag_next:
@@ -151,7 +153,7 @@ def showMain(root):
     label1 = tk.Label(root, text="Your task is:")
     #label1.place(x=50, y=10)
     label1.grid(row=0, column=0)
-    txt1 = tk.Text(master=root, font='Monospace 16', width=int(root.winfo_screenwidth())//15, height=int(root.winfo_screenheight())//27, wrap=tk.WORD)
+    txt1 = tk.Text(master=root, state=tk.DISABLED, font='Monospace 16', width=int(root.winfo_screenwidth())//15, height=int(root.winfo_screenheight())//27, wrap=tk.WORD)
     #txt1 = tk.Text(master=root, font='Monospace 16', width=122, height=40, wrap=tk.WORD)
     #txt1.place(x=50, y=30)
     txt1.grid(row=1, column=0)

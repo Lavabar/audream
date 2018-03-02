@@ -8,9 +8,11 @@ import threading
 n_files = 0
 counter = 0
 
-def progrtick():
-    if prbar['value'] != counter:
+def progress():
+    while True:
         prbar['value'] = counter
+        if prbar["value"] == prbar["maximum"]:
+            break
 
 def check_fool(outlist):
     for one in outlist:
@@ -44,13 +46,12 @@ def sendVar():
         errbtn.place(x=15, y=60)
     if flag:
         return
-    prbar["maximum"] = n_files
-    #threading.Thread(target=progrtick).start()
     global counter
-    for i in range(0, n_files):
-        print("we are here " + str(counter))
-        counter += 1
-        sleep(1)
+    prbar["maximum"] = n_files
+    for i in range(0, n_files): 
+        print("we are here " + str(i))
+        counter = i + 1
+        sleep(0.3)
     '''s.send("1 0")
     
     s.send()...
@@ -59,18 +60,23 @@ def sendVar():
     lvars = s.recv(ord(k))
     lblvars['text'] = lvars
     s.close()'''
+    btn1["state"] = tk.NORMAL
     return
+
+def fake_sendVar():
+    threading.Thread(target=sendVar).start()
+    btn1["state"] = tk.DISABLED
 
 root = tk.Tk()
 #root.wm_iconbitmap("./icon.ico")
 root.geometry('400x180')
 root.title("Audream constructor v0.1")
-btn1 = tk.Button(root, text="Send variant", width=15, height=3, command=sendVar)
+btn1 = tk.Button(root, text="Send variant", width=15, height=3, command=fake_sendVar)
 btn1.place(x=130, y=100)
 lbl1 = tk.Label(root, text="Your numbers are:")
 lbl1.place(x=10, y=10)
 prbar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
 prbar.pack(side="bottom")
 lblvars = tk.Label(root)
-#threading.Thread(target=progrtick).start()
+threading.Thread(target=progress).start()
 root.mainloop()
