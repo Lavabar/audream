@@ -8,6 +8,8 @@ import threading
 n_files = 0
 counter = 0
 
+path = os.getcwd() + "/" + "work_directory" + "/"
+
 def progress():
     while True:
         prbar['value'] = counter
@@ -19,20 +21,20 @@ def check_fool(outlist):
         if not one.isdigit():
             err = "name dir is wrong: '" + one + "'"
             return 0, err
-        inlist = os.listdir("./work_directory/" + one)
+        inlist = os.listdir(path + one)
         for f in inlist:
             global n_files
             n_files += 1
             partF = f.split(".")
             if not partF[0].isdigit() and (partF[1] == "jpg"):
-                err = "name file is wrong: '" + f + "'"
+                err = "file name is wrong: '" + f + "'"
                 return 0, err 
     return 1, "OK"
 
 def sendVar():
-    #s = socket.socket()
-    #s.connect(("192.168.31.123",9999))
-    n = os.listdir("./work_directory")
+    s = socket.socket()
+    s.connect(("192.168.31.123",9999))
+    n = os.listdir(path)
     flag = 0
     code, err = check_fool(n)
     if  not len(n) or not code:
@@ -48,18 +50,54 @@ def sendVar():
         return
     global counter
     prbar["maximum"] = n_files
-    for i in range(0, n_files): 
-        print("we are here " + str(i))
-        counter = i + 1
-        sleep(0.3)
-    '''s.send("1 0")
-    
-    s.send()...
-    
+    s.send("1 0")
+    s.send(len(n))
+    for i in range(1, len(n) + 1):
+        for j in range(1, 5):
+            zt = path + str(i) + "/" + str(j) + ".txt"
+            zp = path + str(i) + "/" + str(j) + ".jpg"
+            try:
+                f1 = open (zt, "rb")
+                for line in f1:
+                    k1 = chr(len(line) >> 8)
+                    k2 = chr(len(line) - (ord(k1) << 8))
+                    s.send(k1)
+       	            s.send(k2)
+       	            s.send(line)
+                s.send(chr(0))
+                s.send(chr(5))
+                s.send(";;;;;") 
+                f1.close()
+                counter += 1
+            except:
+                s.send(chr(0))
+                s.send(chr(5))
+                s.send(";;;;;")
+                counter += 1
+            if j == 1:
+                try:
+                    f2 = open (zp, "rb")
+                    for line in f2:
+                        k1 = chr(len(line) >> 8)
+       	                k2 = chr(len(line) - (ord(k1) << 8))
+       	                s.send(k1)
+       	                s.send(k2)
+       	                s.send(line)
+                    s.send(chr(0))
+                    s.send(chr(5))
+                    s.send(";;;;;")
+                    f2.close()
+                    counter += 1                   
+                except:
+                    s.send(chr(0))
+                    s.send(chr(5))
+                    s.send(";;;;;")
+                    counter += 1   
+
     k = s.recv(1)
     lvars = s.recv(ord(k))
     lblvars['text'] = lvars
-    s.close()'''
+    s.close()
     btn1["state"] = tk.NORMAL
     return
 
@@ -68,7 +106,7 @@ def fake_sendVar():
     btn1["state"] = tk.DISABLED
 
 root = tk.Tk()
-#root.wm_iconbitmap("./icon.ico")
+root.iconbitmap(os.getcwd() + "/icon.ico")
 root.geometry('400x180')
 root.title("Audream constructor v0.1")
 btn1 = tk.Button(root, text="Send variant", width=15, height=3, command=fake_sendVar)
