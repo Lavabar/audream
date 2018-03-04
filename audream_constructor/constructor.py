@@ -10,8 +10,10 @@ counter = 0
 
 path = os.getcwd() + "/" + "work_directory" + "/"
 
+prbar_flag = True
+
 def progress():
-    while True:
+    while prbar_flag:
         prbar['value'] = counter
         if prbar["value"] == prbar["maximum"]:
             break
@@ -47,11 +49,14 @@ def sendVar():
         errlbl.place(x=10, y=20)
         errbtn.place(x=15, y=60)
     if flag:
+        s.close()
+        btn1["state"] = tk.NORMAL
+        btn2["state"] = tk.NORMAL
         return
     global counter
     prbar["maximum"] = n_files
     s.send("1 0")
-    s.send(len(n))
+    s.send(chr(len(n)))
     for i in range(1, len(n) + 1):
         for j in range(1, 5):
             zt = path + str(i) + "/" + str(j) + ".txt"
@@ -92,25 +97,47 @@ def sendVar():
                     s.send(chr(0))
                     s.send(chr(5))
                     s.send(";;;;;")
-                    counter += 1   
+                    counter += 1
+            else:
+                f2 = open (zp, "rb")
+                for line in f2:
+                    k1 = chr(len(line) >> 8)
+       	            k2 = chr(len(line) - (ord(k1) << 8))
+       	            s.send(k1)
+       	            s.send(k2)
+       	            s.send(line)
+                s.send(chr(0))
+                s.send(chr(5))
+                s.send(";;;;;")
+                f2.close()
+                counter += 1   
 
     k = s.recv(1)
     lvars = s.recv(ord(k))
     lblvars['text'] = lvars
     s.close()
     btn1["state"] = tk.NORMAL
+    btn2["state"] = tk.NORMAL
     return
 
 def fake_sendVar():
     threading.Thread(target=sendVar).start()
     btn1["state"] = tk.DISABLED
+    btn2["state"] = tk.DISABLED
+
+def exitAll():
+    global prbar_flag
+    prbar_flag = False
+    root.destroy()
 
 root = tk.Tk()
-root.iconbitmap(os.getcwd() + "/icon.ico")
+#root.iconbitmap(os.getcwd() + "/icon.ico")
 root.geometry('400x180')
 root.title("Audream constructor v0.1")
 btn1 = tk.Button(root, text="Send variant", width=15, height=3, command=fake_sendVar)
 btn1.place(x=130, y=100)
+btn2 = tk.Button(root, text="Exit", width=5, height=1, command=exitAll)
+btn2.place(x=350, y=115)
 lbl1 = tk.Label(root, text="Your numbers are:")
 lbl1.place(x=10, y=10)
 prbar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
@@ -118,3 +145,4 @@ prbar.pack(side="bottom")
 lblvars = tk.Label(root)
 threading.Thread(target=progress).start()
 root.mainloop()
+print("egor molodec")

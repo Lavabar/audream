@@ -11,10 +11,47 @@ send cmds:
 import socket
 import sys
 from time import sleep
+import os
 
 MSGLEN = 3
 path = "variants/"
-nvar = 1
+
+f1 = open("info.txt", "r")
+nvar = int(f1.read())
+f1.close()
+
+def recv_vars():
+    n = sc.recv(1)
+    n = ord(n)
+
+    global nvar
+    for i in range(nvar + 1, nvar + n + 1):
+            nvar += 1
+            os.mkdir(path + "/" + str(i))
+            for j in range(1, 5):
+                f1 = open(path + "/" + str(i) + "/" + str(j) + ".txt",'wb') #open in binary
+                while True:	
+        	    k1 = sc.recv(1)
+	 	    k2 = sc.recv(1)
+		    k = (ord(k1) << 8) + ord(k2)
+		    data = sc.recv(k)
+        	    if data == ";;;;;":
+        	        break
+        	    f1.write(data)
+                f1.close()
+                f2 = open(path + "/" + str(i) + "/" + str(j) + ".jpg",'wb') #open in binary
+                while True:	
+        	    k1 = sc.recv(1)
+	 	    k2 = sc.recv(1)
+		    k = (ord(k1) << 8) + ord(k2)
+		    data = sc.recv(k)
+        	    if data == ";;;;;":
+        	        break
+        	    f2.write(data)
+                f2.close()
+    f = open("info.txt", "w")
+    f.write(str(nvar))
+    f.close()
 
 def update_stat():
     sf = open("statistics.txt", "r")
@@ -78,10 +115,13 @@ while (True):
         if cmd[0] == "0":
             update_stat()    
             update_base(ord(cmd[1]))
+        elif cmd[0] == "1":
+            print("i recieved command '1'")
+            recv_vars()
         elif cmd[0] == "2":
             break
-        else:
-            print("Wrong cmd!")
+        #else:
+        #    print("Wrong cmd!")
     sc.close()
     break # just for testing(need to remove this break)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

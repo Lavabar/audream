@@ -4,37 +4,37 @@ from PIL import Image, ImageTk
 import pyaudio
 import wave
 import threading
-fname = 'records/'
-chosen_var = '1'
+fname = 'records/' # this variable take part in forming file name of record
+chosen_var = '1' # default variant is '1'
 
-timer_listsec = [5, 90, 90]
-c = 0
-total = 0
-timer_running = False
-default_seconds = timer_listsec[c]
+timer_listsec = [5, 90, 90] # there are three conditions of timer 'be ready' 'preparing' and 'recording'. So each condition corresponds to each element of the list. This list defines number of seconds that timer is showing on each condition
+c = 0 # this is a relative counter of conditions
+total = 0 # this is an absolute counter of conditions
+timer_running = False # flag for timer. Everything is understandable
+default_seconds = timer_listsec[c] # Defines first condition of timer. 'Be ready'
 timer_seconds = default_seconds
-timer_labels = ["Be ready for task", "Preparing...", "Recording..."]
+timer_labels = ["Be ready for task", "Preparing...", "Recording..."] # the same that timer_listsec, but it changes label below the timer, but not seconds
 
-flag_next = True
-flag_voice = True
+flag_next = True # flag which controlls switching tasks
+flag_voice = True # flag which allows recording
 
-numbers = {
+numbers = { # This is a "kostyil'". It is intended to switch tasks. It tells program in which value of "total" it(program) have to change the filling of textbox
                 1: '1',
                 4: '2',
                 7: '3',
                 10: '4'
             }
 
-listbox_items = ['var 1', 'var 2']
+listbox_items = ['var 1', 'var 2'] # list for listbox
 
-def exitAll(root):
+def exitAll(root): # killall(in some way)
     root.destroy()
 
 #
 #Tasks section
 #
 
-def voiceRecorder(suff):
+def voiceRecorder(suff): #source: 'http://sharewebegin.blogspot.ru/2013/07/record-from-mic-python.html'
     global flag_voice
     flag_voice = True
     CHUNK = 1024 
@@ -75,7 +75,9 @@ def voiceRecorder(suff):
     wf.close()
 
 def clearTextbox(txt):
+    txt['state'] = tk.NORMAL
     txt.delete('1.0', tk.END)
+    txt['state'] = tk.DISABLED
 def openTask(num, txt):
     txt['state'] = tk.NORMAL
     txtname = 'variants/' + chosen_var + '/' + num + '.txt'
@@ -104,33 +106,33 @@ def timer_reset(tmr, label):
     label.config(text=timer_labels[c])
     show_timer(tmr)
 
-def timer_tick(root, tmr, label, txt):
-    root.focus_force()
+def timer_tick(root, tmr, label, txt): # the most meanigful function(must be really carefull)
+    root.focus_force() # TODO: make more effective controll of focus
     global timer_seconds, c, total, flag_next
-    t = threading.Thread(target=lambda:voiceRecorder(numbers[total - 1]))
+    t = threading.Thread(target=lambda:voiceRecorder(numbers[total - 1])) # recording in another thread
     if timer_running and timer_seconds and flag_next:
-        tmr.after(1000, lambda:timer_tick(root, tmr, label, txt))  
-        
+        tmr.after(1000, lambda:timer_tick(root, tmr, label, txt))
         timer_seconds -= 1
         show_timer(tmr)
-    elif (c < 2) and (total < 11):
+    elif (c < 2) and (total < 11): # change to next condition
         flag_next = True
         c += 1
         total += 1
         timer_reset(tmr, label)
         timer_start_pause(root, tmr, label, txt)
-        if c == 1:
-            openTask(numbers[total], txt)
+	#depending on relative counter of conditions we are openning next task or starting recording        
+	if c == 1:
+            openTask(numbers[total], txt) # opens next task
         if c == 2:
-            t.start()
-    elif (c == 2) and (total < 11):
+            t.start() # starts recording
+    elif (c == 2) and (total < 11): # zero relative counter of conditions. Go to next iteration of conditions
         flag_next = True
         clearTextbox(txt)
         c = 0
         total += 1
         timer_reset(tmr, label)
         timer_start_pause(root, tmr, label, txt)
-    elif total == 11:
+    elif total == 11: # in the end just switching off
         exitAll(root)
 def show_timer(tmr):
     m = timer_seconds // 60
