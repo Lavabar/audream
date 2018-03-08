@@ -8,7 +8,7 @@ import threading
 n_files = 0
 counter = 0
 
-path = os.getcwd() + "/" + "work_directory" + "/"
+path = "work_directory" + "/"
 
 prbar_flag = True
 
@@ -33,26 +33,9 @@ def check_fool(outlist):
                 return 0, err 
     return 1, "OK"
 
-def sendVar():
+def sendVar(n):
     s = socket.socket()
     s.connect(("192.168.31.123",9999))
-    n = os.listdir(path)
-    flag = 0
-    code, err = check_fool(n)
-    if  not len(n) or not code:
-        flag += 1
-        errform = tk.Toplevel(root)
-        errform.geometry("200x90")
-        errform.transient(root)
-        errlbl = tk.Label(errform, text="Error:" + err + "\nPlease, complete all instructions", font="10")
-        errbtn = tk.Button(errform, text="Ok!", width=5, height=1, command=errform.destroy)
-        errlbl.place(x=10, y=20)
-        errbtn.place(x=15, y=60)
-    if flag:
-        s.close()
-        btn1["state"] = tk.NORMAL
-        btn2["state"] = tk.NORMAL
-        return
     global counter
     prbar["maximum"] = n_files
     s.send("1 0")
@@ -121,9 +104,29 @@ def sendVar():
     return
 
 def fake_sendVar():
-    threading.Thread(target=sendVar).start()
     btn1["state"] = tk.DISABLED
     btn2["state"] = tk.DISABLED
+    n = os.listdir(path)
+    flag = 0
+    code, err = check_fool(n)
+    if  not len(n) or not code:
+        if err == "OK":
+            err = "work_directory is empty"
+        flag += 1
+        errform = tk.Toplevel(root)
+        errform.resizable(0, 0)
+        errform.geometry("200x90")
+        errform.transient(root)
+        errlbl = tk.Label(errform, text="Error:" + err + "\nPlease, complete all instructions", font="7")
+        errbtn = tk.Button(errform, text="Ok!", width=5, height=1, command=errform.destroy)
+        errlbl.place(x=10, y=20)
+        errbtn.place(x=15, y=60)
+    if flag:
+        btn1["state"] = tk.NORMAL
+        btn2["state"] = tk.NORMAL
+        return
+    threading.Thread(target=lambda:sendVar(n)).start()
+    threading.Thread(target=progress).start()
 
 def exitAll():
     global prbar_flag
@@ -134,15 +137,14 @@ root = tk.Tk()
 #root.iconbitmap(os.getcwd() + "/icon.ico")
 root.geometry('400x180')
 root.title("Audream constructor v0.1")
+#root.protocol('WM_DELETE_WINDOW')
 btn1 = tk.Button(root, text="Send variant", width=15, height=3, command=fake_sendVar)
 btn1.place(x=130, y=100)
 btn2 = tk.Button(root, text="Exit", width=5, height=1, command=exitAll)
-btn2.place(x=350, y=115)
+btn2.place(x=320, y=15)
 lbl1 = tk.Label(root, text="Your numbers are:")
 lbl1.place(x=10, y=10)
 prbar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
 prbar.pack(side="bottom")
 lblvars = tk.Label(root)
-threading.Thread(target=progress).start()
 root.mainloop()
-print("egor molodec")
