@@ -4,6 +4,9 @@ from PIL import Image, ImageTk
 import pyaudio
 import wave
 import threading
+import socket
+import client as cl
+
 fname = 'records/' # this variable take part in forming file name of record
 chosen_var = '1' # default variant is '1'
 
@@ -107,7 +110,6 @@ def timer_reset(tmr, label):
     show_timer(tmr)
 
 def timer_tick(root, tmr, label, txt): # the most meanigful function(must be really carefull)
-    root.focus_force() # TODO: make more effective controll of focus
     global timer_seconds, c, total, flag_next
     t = threading.Thread(target=lambda:voiceRecorder(numbers[total - 1])) # recording in another thread
     if timer_running and timer_seconds and flag_next:
@@ -121,7 +123,7 @@ def timer_tick(root, tmr, label, txt): # the most meanigful function(must be rea
         timer_reset(tmr, label)
         timer_start_pause(root, tmr, label, txt)
 	#depending on relative counter of conditions we are openning next task or starting recording        
-	if c == 1:
+        if c == 1:
             openTask(numbers[total], txt) # opens next task
         if c == 2:
             t.start() # starts recording
@@ -150,26 +152,33 @@ def nextTask():
 
 def showMain(root):
     root.deiconify()
+    root['bg'] = "#ffffff"
     root.attributes('-fullscreen', 1)
     root.focus_force()
+    root.overrideredirect(1)
     label1 = tk.Label(root, text="Your task is:")
+    label1['bg'] = "#ffffff"
     #label1.place(x=50, y=10)
     label1.grid(row=0, column=0)
     txt1 = tk.Text(master=root, state=tk.DISABLED, font='Monospace 16', width=int(root.winfo_screenwidth())//15, height=int(root.winfo_screenheight())//27, wrap=tk.WORD)
+    txt1['bg'] = "#ffc299"
     #txt1 = tk.Text(master=root, font='Monospace 16', width=122, height=40, wrap=tk.WORD)
     #txt1.place(x=50, y=30)
     txt1.grid(row=1, column=0)
 
     tmr = tk.Label(root, font='Monospace 30')
+    tmr['bg'] = "#ffffff"
     #tmr.place(x=1600, y=30)
     tmr.grid(row=0, column=1)
     show_timer(tmr)
     label2 = tk.Label(root, text=timer_labels[c], font='18')
+    label2['bg'] = "#ffffff"
     #label2.place(x=1600, y=90)
     label2.grid(row=1, column=1, columnspan=2, sticky=tk.N)
     timer_start_pause(root, tmr, label2, txt1)
 
     btn = tk.Button(root, state=tk.NORMAL, text="Next task", width=15, height=3, command=nextTask)
+    btn['bg'] = "#ff6600"
     #btn.pack(side="right")
     btn.grid(row=1, column=3, columnspan=4, rowspan=2, sticky=tk.W+tk.S)
 
@@ -188,10 +197,12 @@ def select_item(event, arg):
 
 def showVariant(root):
     varform = tk.Toplevel(root)
+    varform['bg'] = "#ffffff"
     varform.geometry('400x180')
     varform.title("Audream v0.9")
     varform.focus_force()
     listbox = tk.Listbox(varform, width=10, height=2, font=('13'))
+    listbox['bg'] = "#ffc299"
     listbox.bind('<<ListboxSelect>>', lambda event, arg=listbox:select_item(event, arg))
     listbox.place(x=150, y=20)
 
@@ -199,8 +210,10 @@ def showVariant(root):
         listbox.insert(tk.END, item)
 
     btn1 = tk.Button(varform, text="Continue", width=15, height=3, command=lambda:gotoMain(root, varform))
+    btn1['bg'] = "#ff6600"
     btn1.place(x=50, y=80)
     btn2 = tk.Button(varform, text="Exit", width=15, height=3, command=lambda:exitAll(root))
+    btn2['bg'] = "#ff6600"
     btn2.place(x=200, y=80)
 #
 #Registration section
@@ -218,19 +231,50 @@ def showReg(root):
     regform = tk.Toplevel(root)
     regform.geometry('400x180')
     regform.title("Audream v0.9")
+    regform['bg'] = "#ffffff"
     #regform.winfo_toplevel().title
     label1 = tk.Label(regform, text="Enter your first and last name")
     label1.place(x=50, y=10)
+    label1['bg'] = "#ffffff"
     e1 = tk.Entry(regform)
     e1.place(x=225, y=10)
     e1.focus_set()
     
     label2 = tk.Label(regform, text="Enter the number of your group")
     label2.place(x=50, y=40)
+    label2['bg'] = "#ffffff"
     e2 = tk.Entry(regform)
     e2.place(x=225, y=40)
     
     btn1 = tk.Button(regform, text="Continue", width=15, height=3, command=lambda:gotoVar(root, regform, e1, e2))
+    btn1['bg'] = "#ff6600"
     btn1.place(x=50, y=80)
     btn2 = tk.Button(regform, text="Exit", width=15, height=3, command=lambda:exitAll(root))
+    btn2['bg'] = "#ff6600"
     btn2.place(x=200, y=80)
+
+#
+#Advert section
+#
+
+def gotoReg(root, advform):
+    advform.destroy()
+    showReg(root)
+
+def showAdv(root):
+    advform = tk.Toplevel(root)
+    advform.geometry('408x400+%d+%d' % (root.winfo_screenwidth()//2-204, root.winfo_screenheight()//2-200))
+    advform.overrideredirect(1)
+    txt = tk.Text(advform, width=408, height=400)
+    txt.pack()
+    imgname = "./logo.png"
+    fimg = Image.open(imgname)
+    img = ImageTk.PhotoImage(fimg)
+    txt.image_create(tk.END, image=img)
+    txt.image = img
+    advform.after(5000, lambda:gotoReg(root, advform))
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("192.168.31.123",9999))
+    cl.update_base(s)
+    s.close()
