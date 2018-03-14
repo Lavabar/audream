@@ -15,8 +15,9 @@ prbar_flag = True
 def progress():
     while prbar_flag:
         prbar['value'] = counter
-        if prbar["value"] == prbar["maximum"]:
+        if prbar["value"] >= prbar["maximum"]:
             break
+    return
 
 def check_fool(outlist):
     for one in outlist:
@@ -28,14 +29,32 @@ def check_fool(outlist):
             global n_files
             n_files += 1
             partF = f.split(".")
-            if not partF[0].isdigit() and (partF[1] == "jpg"):
+            if (partF[1] != "jpg") and (partF[1] != "png") and (partF[1] != "txt"):
+                err = "Wrong format of file: '" + f + "'"
+                return 0, err
+            if not partF[0].isdigit():
                 err = "file name is wrong: '" + f + "'"
                 return 0, err 
     return 1, "OK"
 
+def sendFile(s, f, form):
+    if form != -1:
+        s.send(form)
+    if f != -1:
+        for line in f:
+            k1 = chr(len(line) >> 8)
+            k2 = chr(len(line) - (ord(k1) << 8))
+            s.send(k1)
+            s.send(k2)
+            s.send(line)
+    s.send(chr(0))
+    s.send(chr(5))
+    s.send(";;;;;")
+    return
+
 def sendVar(n):
     s = socket.socket()
-    s.connect(("192.168.31.123",9999))
+    s.connect(("192.168.43.110",9999))
     global counter
     prbar["maximum"] = n_files
     s.send("1 0")
@@ -46,54 +65,49 @@ def sendVar(n):
             zp = path + str(i) + "/" + str(j) + ".jpg"
             try:
                 f1 = open (zt, "rb")
-                for line in f1:
-                    k1 = chr(len(line) >> 8)
-                    k2 = chr(len(line) - (ord(k1) << 8))
-                    s.send(k1)
-       	            s.send(k2)
-       	            s.send(line)
-                s.send(chr(0))
-                s.send(chr(5))
-                s.send(";;;;;") 
-                f1.close()
+            except IOError:
+                sendFile(s, -1, -1) # send empty txt file
                 counter += 1
-            except:
-                s.send(chr(0))
-                s.send(chr(5))
-                s.send(";;;;;")
+            else:
+                sendFile(s, f1, -1) # send not empty txt file
+                f1.close()
                 counter += 1
             if j == 1:
                 try:
                     f2 = open (zp, "rb")
-                    for line in f2:
-                        k1 = chr(len(line) >> 8)
-       	                k2 = chr(len(line) - (ord(k1) << 8))
-       	                s.send(k1)
-       	                s.send(k2)
-       	                s.send(line)
-                    s.send(chr(0))
-                    s.send(chr(5))
-                    s.send(";;;;;")
+                except IOError:
+                    try:
+                        zp = path + str(i) + "/" + str(j) + ".png"
+                        f2 = open (zp, "rb")
+                    except IOError:
+                        sendFile(s, -1, "J") # send empty jpg file
+                        counter += 1
+                    else:
+                        sendFile(s, f2, "P") # send not empty png file
+                        f2.close()
+                        counter += 1
+                else:
+                    sendFile(s, f2, "J")
                     f2.close()
-                    counter += 1                   
-                except:
-                    s.send(chr(0))
-                    s.send(chr(5))
-                    s.send(";;;;;")
                     counter += 1
             else:
-                f2 = open (zp, "rb")
-                for line in f2:
-                    k1 = chr(len(line) >> 8)
-       	            k2 = chr(len(line) - (ord(k1) << 8))
-       	            s.send(k1)
-       	            s.send(k2)
-       	            s.send(line)
-                s.send(chr(0))
-                s.send(chr(5))
-                s.send(";;;;;")
-                f2.close()
-                counter += 1   
+                try:
+                    f2 = open (zp, "rb")
+                except IOError:
+                    try:
+                        zp = path + str(i) + "/" + str(j) + ".png"
+                        f2 = open(zp, "rb")
+                    except IOError:
+                        sendFile(s, -1, "J")
+                        counter += 1
+                    else:
+                        sendFile(s, f2, "P")
+                        f2.close()
+                        counter += 1
+                else:
+                    sendFile(s, f2, "J")
+                    f2.close()
+                    counter += 1   
 
     k = s.recv(1)
     lvars = s.recv(ord(k))
@@ -115,7 +129,7 @@ def fake_sendVar():
         flag += 1
         errform = tk.Toplevel(root)
         errform.resizable(0, 0)
-        errform.geometry("200x90")
+        errform.geometry("400x90")
         errform.transient(root)
         errlbl = tk.Label(errform, text="Error:" + err + "\nPlease, complete all instructions", font="7")
         errbtn = tk.Button(errform, text="Ok!", width=5, height=1, command=errform.destroy)
@@ -127,11 +141,13 @@ def fake_sendVar():
         return
     threading.Thread(target=lambda:sendVar(n)).start()
     threading.Thread(target=progress).start()
+    return
 
 def exitAll():
     global prbar_flag
     prbar_flag = False
     root.destroy()
+    return
 
 root = tk.Tk()
 #root.iconbitmap(os.getcwd() + "/icon.ico")
@@ -146,5 +162,6 @@ lbl1 = tk.Label(root, text="Your numbers are:")
 lbl1.place(x=10, y=10)
 prbar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
 prbar.pack(side="bottom")
-lblvars = tk.Label(root)
+lblvars = tk.Label(root, font="Monospace 15")
+lblvars.place(x=150, y=50)
 root.mainloop()

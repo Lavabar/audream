@@ -7,6 +7,8 @@ send cmds:
 recv cmds:
 "0" - UOK(you okay)
 "1" - UNOK(you not okay)
+#"J" - next file in jpeg format
+#"P" - next file in png format
 '''
 
 import os
@@ -34,28 +36,20 @@ def update_base(s):
     elif cmd[0] == "1":
         for i in range(n + 1, ord(cmd[1]) + 1):
             os.mkdir(path + "/" + str(i))
-            for j in range(1, 5):
-                f1 = open(path + "/" + str(i) + "/" + str(j) + ".txt",'wb') #open in binary
+            for _ in range(8):
+                nc = s.recv(1)
+                name = s.recv(ord(nc)) # recieving file name(now we can use png so as jpg)
+                f1 = open(path + "/" + str(i) + "/" + name,'wb') #open in binary
                 while True:
-		    # getting length of incoming pack(there is one number including 2 bytes because of the problem with sockets)	
-        	    k1 = s.recv(1)
-	 	    k2 = s.recv(1)
-		    k = (ord(k1) << 8) + ord(k2)
-		    data = s.recv(k)
-        	    if data == ";;;;;": # end of file feature
-        	        break
-        	    f1.write(data)
+                    # getting length of incoming pack(there is one number including 2 bytes because of the problem with sockets)	
+                    k1 = s.recv(1)
+                    k2 = s.recv(1)
+                    k = (ord(k1) << 8) + ord(k2)
+                    data = s.recv(k)
+                    if data == ";;;;;": # end of file feature
+                        break
+                    f1.write(data)
                 f1.close()
-                f2 = open(path + "/" + str(i) + "/" + str(j) + ".jpg",'wb') #open in binary
-                while True:	
-        	    k1 = s.recv(1)
-	 	    k2 = s.recv(1)
-		    k = (ord(k1) << 8) + ord(k2)
-		    data = s.recv(k)
-        	    if data == ";;;;;":
-        	        break
-        	    f2.write(data)
-                f2.close()
     else:
         print("wrong answer! "+ans)
     s.send("2  ")

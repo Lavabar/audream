@@ -28,10 +28,18 @@ numbers = { # This is a "kostyil'". It is intended to switch tasks. It tells pro
                 10: '4'
             }
 
-listbox_items = ['var 1', 'var 2'] # list for listbox
-
-def exitAll(root): # killall(in some way)
+def exitAll(root):
     root.destroy()
+
+def openErr(root, error):
+    errform = tk.Toplevel(root)
+    errform.resizable(0, 0)
+    errform.geometry("300x90")
+    errform.transient(root)
+    errlbl = tk.Label(errform, text="Error/Warning:" + error + "\nPlease, complete all instructions", font="7")
+    errbtn = tk.Button(errform, text="Ok!", width=5, height=1, command=errform.destroy)
+    errlbl.place(x=10, y=20)
+    errbtn.place(x=15, y=60) 
 
 #
 #Tasks section
@@ -195,17 +203,25 @@ def select_item(event, arg):
     global chosen_var
     chosen_var = value[-1]
 
+def get_items():
+    items = []
+    flist = open("info_vars.txt", "r")
+    for line in flist:
+        items.append("var " + line)
+    return items
+
 def showVariant(root):
     varform = tk.Toplevel(root)
     varform['bg'] = "#ffffff"
-    varform.geometry('400x180')
+    varform.wm_attributes("-type", "splash")
+    varform.geometry('400x180+%d+%d' % (root.winfo_screenwidth()//2-200, root.winfo_screenheight()//2-90))
     varform.title("Audream v0.9")
     varform.focus_force()
     listbox = tk.Listbox(varform, width=10, height=2, font=('13'))
     listbox['bg'] = "#ffc299"
     listbox.bind('<<ListboxSelect>>', lambda event, arg=listbox:select_item(event, arg))
     listbox.place(x=150, y=20)
-
+    listbox_items = get_items()
     for item in listbox_items:
         listbox.insert(tk.END, item)
 
@@ -223,13 +239,17 @@ def gotoVar(root, regform, e1, e2):
     global fname
     s = e1.get().split(' ')
     s1 = e2.get()
+    if (s == '') or (s1 == ''):
+        openErr(regform, "entry field is empty")
+        return
     fname += s1 + s[0] + s[1]
     regform.destroy()
     showVariant(root)
 
 def showReg(root):
     regform = tk.Toplevel(root)
-    regform.geometry('400x180')
+    regform.wm_attributes("-type", "splash")
+    regform.geometry('400x180+%d+%d' % (root.winfo_screenwidth()//2-200, root.winfo_screenheight()//2-90))
     regform.title("Audream v0.9")
     regform['bg'] = "#ffffff"
     #regform.winfo_toplevel().title
@@ -261,6 +281,19 @@ def gotoReg(root, advform):
     advform.destroy()
     showReg(root)
 
+def setConnection(advform):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2)
+    try:
+        s.connect(("192.168.43.110",9999))
+    except socket.error:
+        openErr(advform, "no connection with server")
+    else:    
+        code = cl.update_base(s)
+        s.close()
+        if code:
+            openWarn(advform, "connection was lost before updating")
+
 def showAdv(root):
     advform = tk.Toplevel(root)
     advform.geometry('408x400+%d+%d' % (root.winfo_screenwidth()//2-204, root.winfo_screenheight()//2-200))
@@ -273,8 +306,6 @@ def showAdv(root):
     txt.image_create(tk.END, image=img)
     txt.image = img
     advform.after(5000, lambda:gotoReg(root, advform))
+
+    threading.Thread(target=lambda:setConnection(advform)).start()
     
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("192.168.31.123",9999))
-    cl.update_base(s)
-    s.close()
